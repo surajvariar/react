@@ -1,29 +1,55 @@
 import React from "react";
 
 
+window.API = {
+  fetchFriends() {
+    return new Promise((res, rej) => {
+      const friends = [
+        {
+          name: 'Jordyn',
+          active: true,
+        },
+        {
+          name: 'Mikenzi',
+          active: true,
+        },
+        {
+          name: 'Jake',
+          active: false
+        }
+      ]
+
+      setTimeout(() => res(friends), 2000)
+    })
+  }
+}
+
 
 //state component
 class App extends React.Component {
   constructor() {
     super();
     this.state = {
-      friends: [{
-        name:'Ron',
-        active:true
-      },{
-        name:'Harry',
-        active:true
-      },{
-        name:'Jack',
-        active:false
-      }],
-      input: ''
+      friends: [],
+      input: '',
+      loading:true
     }
     this.handleRemoveFriend = this.handleRemoveFriend.bind(this)
     this.updateInput = this.updateInput.bind(this)
     this.handleAddFriend = this.handleAddFriend.bind(this)
     this.clearList=this.clearList.bind(this)
     this.handleFriendsStatus=this.handleFriendsStatus.bind(this)
+  }
+
+  
+
+  componentDidMount(){
+    window.API.fetchFriends().then((friends)=>{
+      this.setState({
+          friends,
+          loading:false
+      })
+    })
   }
 
   handleRemoveFriend(name) {
@@ -73,6 +99,11 @@ this.setState((currentState)=>{
   }
 
   render() {
+    if(this.state.loading){
+      return(
+        <Loading/>
+      )
+    }
     return <div>
       <input type="text" placeholder="New Friend" value={this.state.input} onChange={this.updateInput}></input>
       <button onClick={this.handleAddFriend}>Submit</button>
@@ -114,6 +145,31 @@ const InactiveFriendsList=(props)=>{
       </ul>
     </div>
   )
+}
+
+class Loading extends React.Component{
+  constructor(){
+    super()
+    this.state={
+      text:"Loading"
+    }
+  }
+  componentDidMount(){
+    const stopper=this.state.text + '...'
+    this.interval = window.setInterval(() => {
+      this.state.text === stopper
+        ? this.setState(() => ({ text: 'Loading' }))
+        : this.setState((prevState) => ({ text: prevState.text + '.' }))
+    }, 300)
+  }
+
+  componentWillUnmount(){
+    window.clearInterval(this.interval)
+  }
+
+  render(){
+    return <p>{this.state.text}</p>
+  }
 }
 
 export default App
