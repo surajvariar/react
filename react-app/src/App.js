@@ -7,16 +7,23 @@ class App extends React.Component {
   constructor() {
     super();
     this.state = {
-      friends: ['Ron', 'Harry', 'James'],
-      inactivefriends:['Josh'],
+      friends: [{
+        name:'Ron',
+        active:true
+      },{
+        name:'Harry',
+        active:true
+      },{
+        name:'Jack',
+        active:false
+      }],
       input: ''
     }
     this.handleRemoveFriend = this.handleRemoveFriend.bind(this)
     this.updateInput = this.updateInput.bind(this)
     this.handleAddFriend = this.handleAddFriend.bind(this)
     this.clearList=this.clearList.bind(this)
-    this.handleDeactivate=this.handleDeactivate.bind(this)
-    this.handleActivate=this.handleActivate.bind(this)
+    this.handleFriendsStatus=this.handleFriendsStatus.bind(this)
   }
 
   handleRemoveFriend(name) {
@@ -40,28 +47,21 @@ class App extends React.Component {
     this.setState(()=>{
       return{
         friends:[],
-        inactivefriends:[]
       }
     })
   }
 
-  handleDeactivate(name){
-    this.setState((currentState)=>{
-      return{
-        friends:currentState.friends.filter((friend)=>friend!==name),
-        inactivefriends:currentState.inactivefriends.concat([name])
-      }
-    })
+handleFriendsStatus(name){
+  const tempfriend=this.state.friends.find((friend)=>friend.name===name)
+this.setState((currentState)=>{
+  return{
+    friends:currentState.friends.filter((friend)=>friend.name!==name).concat([{
+      name,
+      active:!tempfriend.active
+    }])
   }
-
-  handleActivate(name){
-    this.setState((currentState)=>{
-      return{
-        inactivefriends:currentState.inactivefriends.filter((friend)=>friend!==name),
-        friends:currentState.friends.concat([name])
-      }
-    })
-  }
+})
+}
 
   updateInput(e) {
     this.setState({
@@ -75,8 +75,8 @@ class App extends React.Component {
       <button onClick={this.handleAddFriend}>Submit</button>
       <br></br>
       <button onClick={this.clearList}>Clear All</button>
-      <FriendsList list={this.state.friends} onRemove={this.handleRemoveFriend} onDeactivate={this.handleDeactivate}/>
-      <InactiveFriendsList inactivelist={this.state.inactivefriends} onActivate={this.handleActivate}/>
+      <FriendsList list={this.state.friends.filter((freind)=>freind.active===true)} onRemove={this.handleRemoveFriend} onDeactivate={this.handleFriendsStatus} />
+      <InactiveFriendsList list={this.state.friends.filter((freind)=>freind.active===false)} onActivate={this.handleFriendsStatus}/>
     </div>
   }
 }
@@ -86,11 +86,11 @@ const FriendsList = (props) => {
     <div>
       <h1>Active Friends</h1>
       <ul>
-        {props.list.map((name) =>
-          <li key={name}>
-            <span>{name}</span> &nbsp;
-            <button onClick={() => { props.onRemove(name) }}>Remove</button> &nbsp;
-            <button onClick={()=>{props.onDeactivate(name)}}>Deactivate</button>
+        {props.list.map((friend) =>
+          <li key={friend.name}>
+            <span>{friend.name}</span> &nbsp;
+            <button onClick={() => { props.onRemove(friend.name) }}>Remove</button> &nbsp;
+            <button onClick={()=>{props.onDeactivate(friend.name)}}>Deactivate</button>
           </li>
         )}
       </ul>
@@ -105,8 +105,8 @@ const InactiveFriendsList=(props)=>{
     <div>
       <h1>Inactive Friends</h1>
       <ul>
-        {props.inactivelist.map((name)=>(
-          <li>{name} <button onClick={()=>props.onActivate(name)}>Activate</button></li>
+        {props.list.map((friend)=>(
+          <li key={friend.name}>{friend.name} <button onClick={()=>props.onActivate(friend.name)}>Activate</button></li>
         ))}
       </ul>
     </div>
