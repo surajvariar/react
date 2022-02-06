@@ -1,5 +1,4 @@
 import React from "react";
-import PropTypes from 'prop-types';
 
 
 
@@ -8,31 +7,35 @@ class App extends React.Component{
   constructor(){
     super();
     this.state={
-      txt:'This is the initial state'
+      friends:['Ron','Harry','James']
     }
+    this.handleRemoveFriend=this.handleRemoveFriend.bind(this)
   }
-  update (e){
-    this.setState({
-      txt:e.target.value
+
+  handleRemoveFriend(name){
+    this.setState((currentState)=>{
+      return{
+        friends:currentState.friends.filter((friend)=>friend!==name)
+      }
     })
   }
+  
   render(){
     return <div>
-      <h1>{this.state.txt}</h1>
-      <input type="text" onChange={this.update.bind(this)}></input>&nbsp;
-      <Button>React</Button>
+       <FriendsList list={this.state.friends} onRemove={this.handleRemoveFriend}/>
       </div>
   }
 }
 
-const Button=(props)=><button>{props.children}</button>
-
-App.propTypes={
-  txt:PropTypes.string
-}
-
-App.defaultProps={
-  txt:"This is a default value"
+const FriendsList=(props)=>{
+   return <ul>
+     {props.list.map((name)=>
+      <li key={name}>
+        <span>{name}</span> &nbsp;
+        <button onClick={()=>{props.onRemove(name)}}>Remove</button>
+        </li>
+     )}
+   </ul> 
 }
 
 export default App
