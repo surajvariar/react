@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Popular Repos</title>
+  <script crossorigin src="https://unpkg.com/react@16/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+  <script src='https://unpkg.com/babel-standalone@6/babel.min.js'></script>
+</head>
+<body>
+  <div id='app'></div>
+  <script>
+    window.API = {
+      fetchPopularRepos(language) {
+        // "language" can be "javascript", "ruby", "python", or "all"
+        const encodedURI = encodeURI(`https://api.github.com/search/repositories?q=stars:>1+language:${language}&sort=stars&order=desc&type=Repositories`)
+
+        return fetch(encodedURI)
+          .then((data) => data.json())
+          .then((repos) => repos.items)
+          .catch((error) => {
+            console.warn(error)
+            return null
+          });
+      }
+    }
+  </script>
+
+  <script type='text/babel'>
+    class Loading extends React.Component {
+      constructor(props) {
+        super(props);
+
+        this.state = {
+          text: 'Loading'
+        };
+      }
+      componentDidMount() {
+        const stopper = this.state.text + '...';
+
+        this.interval = window.setInterval(() => {
+          this.state.text === stopper
+            ? this.setState(() => ({ text: 'Loading' }))
+            : this.setState((prevState) => ({ text: prevState.text + '.' }))
+        }, 300)
+      }
+      componentWillUnmount() {
+        window.clearInterval(this.interval);
+      }
+      render() {
+        return (
+          <p>
+            {this.state.text}
+          </p>
+        )
+      }
+    }
+
+    class App extends React.Component {
+      constructor(){
+          super()
+          this.state={
+              loading:true,
+              languages:[{
+                name:'all',
+              },
+              {
+                name:'javascript',
+              },
+              {
+                name:'ruby',
+              },
+              {
+                name:'python',
+              }
+            ],
+            repolist:'',
+            languageselected:'all'
+          }
+          this.selectedLanguage=this.selectedLanguage.bind(this)
+          this.fetchRepos=this.fetchRepos.bind(this)
+      }
+      componentDidMount(){
+          this.fetchRepos(this.state.languageselected)
+      }
+
+      componentDidUpdate(prevProps,prevState){
+        if(prevState.languageselected !== this.state.languageselected){
+          this.fetchRepos(this.state.languageselected)
+        }
+      }
+
+      fetchRepos(){
+        this.setState({
+          loading:true
+        })
+        API.fetchPopularRepos(this.state.languageselected).then((list)=>{
+            console.log("LIST",list)
+              return(
+                this.setState({
+                  loading:false,
+                  repolist:list
+              })
+              )
+              
+          })
+      }
+      
+      selectedLanguage(language){
+        this.setState({
+          languageselected:language
+        })
+      }
+
+      
+    
+      render() {
+        return (
+          <div>
+            <Languages list={this.state.languages} onSelect={this.selectedLanguage}/>
+            {
+              this.state.loading===true ? <Loading /> : <div> <h1 style={{textAlign:'center'}}> {this.state.languageselected}</h1> <RepoDetails repos={this.state.repolist}/> </div>
+            }
+            
+          </div>
+        )
+      }
+    }
+    const Languages=(props)=>{
+      return (
+        <div>
+          <ul>
+          {props.list.map((language)=>
+              <li key={language.name}><span onClick={()=>{
+                props.onSelect(language.name)
+              }}>
+                {language.name}</span></li>
+            )}  
+          </ul>
+        </div>
+      )
+    }
+
+    const RepoDetails=(props)=>{
+      return(
+        <div>
+          <ul style={{display: 'flex', flexWrap: 'wrap'}}>
+          {props.repos.map(({ name, owner, stargazers_count, html_url }) => (
+            <li key={name} style={{margin: 30}}>
+              <ul>
+                <li><a href={html_url}>{name}</a></li>
+                <li>@{owner.login}</li>
+                <li>{stargazers_count} stars</li>
+              </ul>
+            </li>
+          ))}
+        </ul>
+        </div>
+      )
+    }
+
+
+    ReactDOM.render(
+      <App />,
+      document.getElementById('app')
+    )
+  </script>
+</body>
+</html>
