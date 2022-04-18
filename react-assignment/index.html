@@ -94,7 +94,6 @@
           loading:true
         })
         API.fetchPopularRepos(this.state.languageselected).then((list)=>{
-            console.log("LIST",list)
               return(
                 this.setState({
                   loading:false,
